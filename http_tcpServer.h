@@ -15,13 +15,13 @@ namespace http
     {
         public:
             int servSocket;
+            std::string out;
             sockaddr_in serverAddress;
             
             TcpServer();
             ~TcpServer();
-            handleRequest();
+            bool handleRequest(char data[]);
     };
-
 }
 
 

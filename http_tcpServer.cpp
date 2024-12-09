@@ -1,9 +1,17 @@
 #include "./http_tcpServer.h"
-
+#include "./tokenizer.h"
+#include "./parser.h"
+#include <iostream>
 
 namespace http{
-    TcpServer::handleRequest(){
+    bool TcpServer::handleRequest(char data[]){
+        std::string input = data;
+        tokenizer tokenizer(input);
+        parser p(tokenizer);
+
+        p.parse_http();
         
+        return false;
     }
 
     TcpServer::TcpServer(){
@@ -12,23 +20,30 @@ namespace http{
         // specifying the address
         sockaddr_in serverAddress;
         serverAddress.sin_family = AF_INET;
-        serverAddress.sin_port = htons(8081);
+        serverAddress.sin_port = htons(8080);
         serverAddress.sin_addr.s_addr = INADDR_ANY;
 
         // binding socket.
-        bind(this -> servSocket, (struct sockaddr*)&serverAddress,
-            sizeof(serverAddress));
+        if(bind(this -> servSocket, (struct sockaddr*)&serverAddress,
+            sizeof(serverAddress))){
+                std::cerr<<"Error in binding of socket"<<std::endl;
+        }
 
-        // listening to the assigned socket
-        listen(this -> servSocket, 5);
+        if(listen(this -> servSocket, 5) == -1){
+            std::cerr<<"Error in listening of socket"<<std::endl;
+        }
 
-        // accepting connection request
         int clientSocket
             = accept(this -> servSocket, nullptr, nullptr);
+
+        if(clientSocket == -1) {
+            std::cerr<<"Error accepting socket"<<std::endl;
+        }
 
         while(true){
             char buffer[1024] = { 0 };
             recv(clientSocket, buffer, sizeof(buffer), 0);
+            // std::cout<<buffer;
             handleRequest(buffer);
             sleep(1);
         }
@@ -36,7 +51,10 @@ namespace http{
     
     TcpServer::~TcpServer(){
         close(this -> servSocket);
-        
     }
 }
+
+
+
+
 
